@@ -25,7 +25,10 @@ class MainActivity : AppCompatActivity() {
         val addButton = findViewById<Button>(R.id.addObjectButton)
 
         val adapter = ObjectAdapter { obj ->
-            // TODO: открыть экран счётчиков этого объекта
+            val intent = android.content.Intent(this, MeterListActivity::class.java)
+            intent.putExtra(MeterListActivity.EXTRA_OBJECT_NAME, obj.name)
+            intent.putExtra(MeterListActivity.EXTRA_OBJECT_ID, obj.id)
+            startActivity(intent)
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
