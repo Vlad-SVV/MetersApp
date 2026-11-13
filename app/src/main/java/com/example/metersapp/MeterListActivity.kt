@@ -51,9 +51,12 @@ class MeterListActivity : AppCompatActivity() {
         val emptyText = findViewById<TextView>(R.id.emptyText)
         val addButton = findViewById<Button>(R.id.addMeterButton)
 
-        adapter = MeterAdapter { _ ->
-            // TODO: открыть экран показаний (следующий этап)
+        adapter = MeterAdapter { meter ->
+            val intent = android.content.Intent(this, MeterDetailActivity::class.java)
+            intent.putExtra(MeterDetailActivity.EXTRA_METER_ID, meter.id)
+            startActivity(intent)
         }
+
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 

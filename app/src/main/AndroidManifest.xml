@@ -23,6 +23,10 @@
         </activity>
 
         <activity
+            android:name=".MeterDetailActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MeterListActivity"
             android:exported="false" />
 
