@@ -27,7 +27,7 @@ class MeterDetailViewModel(application: Application) : AndroidViewModel(applicat
     val meter: StateFlow<Meter?> = meterIdFlow
         .flatMapLatest { id ->
             if (id == null) flowOf(null)
-            else flowOf(meterDao.getById(id))
+            else meterDao.observeById(id)
         }
         .stateIn(
             scope = viewModelScope,
@@ -59,6 +59,12 @@ class MeterDetailViewModel(application: Application) : AndroidViewModel(applicat
     fun deleteReading(reading: Reading) {
         viewModelScope.launch {
             readingDao.delete(reading)
+        }
+    }
+
+    fun updateMeter(meter: Meter) {
+        viewModelScope.launch {
+            meterDao.update(meter)
         }
     }
 

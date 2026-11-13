@@ -83,6 +83,8 @@ class MeterListActivity : AppCompatActivity() {
         val verificationDateInput = dialogView.findViewById<EditText>(R.id.verificationDateInput)
         val verificationEndDateInput = dialogView.findViewById<EditText>(R.id.verificationEndDateInput)
         val twoTariffCheckbox = dialogView.findViewById<CheckBox>(R.id.twoTariffCheckbox)
+        val tariffInput = dialogView.findViewById<EditText>(R.id.tariffInput)
+        val tariffNightInput = dialogView.findViewById<EditText>(R.id.tariffNightInput)
 
         val types = listOf("Холодная вода", "Горячая вода", "Электроэнергия")
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, types)
@@ -92,10 +94,16 @@ class MeterListActivity : AppCompatActivity() {
         typeSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 twoTariffCheckbox.visibility = if (position == 2) View.VISIBLE else View.GONE
+                tariffNightInput.visibility = if (position == 2 && twoTariffCheckbox.isChecked) View.VISIBLE else View.GONE
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
                 twoTariffCheckbox.visibility = View.GONE
+                twoTariffCheckbox.setOnCheckedChangeListener { _, checked ->
+                    tariffNightInput.visibility = if (checked && typeSpinner.selectedItemPosition == 2) View.VISIBLE else View.GONE
+                }
             }
+
+
         }
 
         AlertDialog.Builder(this)
@@ -126,6 +134,9 @@ class MeterListActivity : AppCompatActivity() {
                     System.currentTimeMillis()
                 }
 
+                val tariff = tariffInput.text.toString().replace(',', '.').toDoubleOrNull()
+                val tariffNight = tariffNightInput.text.toString().replace(',', '.').toDoubleOrNull()
+
                 viewModel.addMeter(
                     objectId = objectId,
                     type = type,
@@ -133,7 +144,9 @@ class MeterListActivity : AppCompatActivity() {
                     serialNumber = serial,
                     verificationDate = verificationDate,
                     verificationEndDate = verificationEndDate,
-                    isTwoTariff = twoTariffCheckbox.isChecked
+                    isTwoTariff = twoTariffCheckbox.isChecked,
+                    tariff = tariff,
+                    tariffNight = tariffNight
                 )
             }
             .setNegativeButton("Отмена", null)

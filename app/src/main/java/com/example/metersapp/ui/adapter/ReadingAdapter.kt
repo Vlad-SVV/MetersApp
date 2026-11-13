@@ -19,12 +19,22 @@ class ReadingAdapter(
     private var items: List<Reading> = emptyList()
     private var meterType: MeterType = MeterType.COLD_WATER
     private var isTwoTariff: Boolean = false
+    private var tariff: Double? = null
+    private var tariffNight: Double? = null
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-    fun submitList(newItems: List<Reading>, type: MeterType, twoTariff: Boolean) {
+    fun submitList(
+        newItems: List<Reading>,
+        type: MeterType,
+        twoTariff: Boolean,
+        tariff: Double?,
+        tariffNight: Double?
+    ) {
         items = newItems
         meterType = type
         isTwoTariff = twoTariff
+        this.tariff = tariff
+        this.tariffNight = tariffNight
         notifyDataSetChanged()
     }
 
@@ -36,7 +46,6 @@ class ReadingAdapter(
 
     override fun onBindViewHolder(holder: ReadingViewHolder, position: Int) {
         val item = items[position]
-        // Предыдущее (более старое) показание — следующий элемент в списке (список DESC)
         val previous = items.getOrNull(position + 1)
         holder.bind(item, previous)
         holder.itemView.setOnClickListener { onClick(item) }
@@ -60,7 +69,6 @@ class ReadingAdapter(
             }
             valueText.text = valueStr
 
-            // Расчёт расхода
             val consumption = when {
                 reading.value != null && previous?.value != null -> {
                     val diff = reading.value - previous.value
@@ -75,8 +83,34 @@ class ReadingAdapter(
                 else -> null
             }
 
-            consumptionText.text = consumption ?: ""
-            consumptionText.visibility = if (consumption != null) View.VISIBLE else View.GONE
+            // Стоимость
+            val cost = when {
+                reading.value != null && previous?.value != null && tariff != null -> {
+                    val diff = reading.value - previous.value
+                    val sum = diff * tariff!!
+                    "Стоимость: %.2f руб.".format(sum)
+                }
+                reading.valueDay != null && reading.valueNight != null &&
+                        previous?.valueDay != null && previous.valueNight != null &&
+                        tariff != null && tariffNight != null -> {
+                    val diffDay = reading.valueDay - previous.valueDay
+                    val diffNight = reading.valueNight - previous.valueNight
+                    val sum = diffDay * tariff!! + diffNight * tariffNight!!
+                    "Стоимость: %.2f руб.".format(sum)
+                }
+                else -> null
+            }
+
+            val fullText = buildString {
+                if (consumption != null) append(consumption)
+                if (cost != null) {
+                    if (isNotEmpty()) append(" • ")
+                    append(cost)
+                }
+            }
+
+            consumptionText.text = fullText
+            consumptionText.visibility = if (fullText.isNotEmpty()) View.VISIBLE else View.GONE
         }
     }
 }

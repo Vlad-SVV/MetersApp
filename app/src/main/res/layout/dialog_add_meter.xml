@@ -52,6 +52,23 @@
             android:hint="Дата окончания поверки (ДД.ММ.ГГГГ)"
             android:inputType="date" />
 
+        <EditText
+            android:id="@+id/tariffInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Тариф (руб.)"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/tariffNightInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Ночной тариф (руб.)"
+            android:inputType="numberDecimal"
+            android:visibility="gone" />
+
         <CheckBox
             android:id="@+id/twoTariffCheckbox"
             android:layout_width="match_parent"

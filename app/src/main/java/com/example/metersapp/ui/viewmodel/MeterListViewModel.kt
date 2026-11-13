@@ -45,7 +45,9 @@ class MeterListViewModel(application: Application) : AndroidViewModel(applicatio
         serialNumber: String,
         verificationDate: Long,
         verificationEndDate: Long,
-        isTwoTariff: Boolean = false
+        isTwoTariff: Boolean = false,
+        tariff: Double? = null,
+        tariffNight: Double? = null
     ) {
         viewModelScope.launch {
             meterDao.insert(
@@ -56,7 +58,9 @@ class MeterListViewModel(application: Application) : AndroidViewModel(applicatio
                     serialNumber = serialNumber,
                     verificationDate = verificationDate,
                     verificationEndDate = verificationEndDate,
-                    isTwoTariff = isTwoTariff
+                    isTwoTariff = isTwoTariff,
+                    tariff = tariff,
+                    tariffNight = tariffNight
                 )
             )
         }

@@ -55,5 +55,11 @@ data class Meter(
     val digits: Int = 6,
 
     /** Двухтарифный ли счётчик (только для электро) */
-    val isTwoTariff: Boolean = false
+    val isTwoTariff: Boolean = false,
+
+    /** Тариф (руб. за м³ или кВт·ч). null — тариф не задан */
+    val tariff: Double? = null,
+
+    /** Ночной тариф (только для двухтарифного электро) */
+    val tariffNight: Double? = null
 )

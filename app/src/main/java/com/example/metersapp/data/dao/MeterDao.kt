@@ -34,4 +34,8 @@ interface MeterDao {
     /** Удалить */
     @Delete
     suspend fun delete(meter: Meter)
+
+    /** Реактивное наблюдение за одним счётчиком (обновляется при изменениях) */
+    @Query("SELECT * FROM meters WHERE id = :id")
+    fun observeById(id: Long): Flow<Meter?>
 }

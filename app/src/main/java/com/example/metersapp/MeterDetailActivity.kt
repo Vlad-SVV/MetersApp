@@ -38,11 +38,25 @@ class MeterDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_meter_detail)
 
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
+            val statusBarHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars()).top
+            view.setPadding(0, statusBarHeight, 0, 0)
+            insets
+        }
+
+
         meterId = intent.getLongExtra(EXTRA_METER_ID, 0)
 
+        // Кнопка «Назад»
         findViewById<Button>(R.id.backButton).setOnClickListener {
             finish()
         }
+
+        // Кнопка «Изменить тариф»
+        findViewById<Button>(R.id.tariffButton).setOnClickListener {
+            showTariffDialog()
+        }
+
 
         val recyclerView = findViewById<RecyclerView>(R.id.readingsRecyclerView)
         val emptyText = findViewById<TextView>(R.id.emptyText)
@@ -69,7 +83,7 @@ class MeterDetailActivity : AppCompatActivity() {
             viewModel.readings.collect { list ->
                 val meter = currentMeter
                 if (meter != null) {
-                    adapter.submitList(list, meter.type, meter.isTwoTariff)
+                    adapter.submitList(list, meter.type, meter.isTwoTariff, meter.tariff, meter.tariffNight)
                 }
                 emptyText.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
                 recyclerView.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
@@ -121,6 +135,41 @@ class MeterDetailActivity : AppCompatActivity() {
             .setNegativeButton("Отмена", null)
             .show()
     }
+    private fun showTariffDialog() {
+        val meter = currentMeter
+        if (meter == null) {
+            android.widget.Toast.makeText(this, "Счётчик ещё загружается, подождите", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        android.util.Log.d("TARIFF", "Открываю тариф для ${meter.name}, tariff=${meter.tariff}")
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_tariff, null)
+        val tariffInput = dialogView.findViewById<EditText>(R.id.tariffInput)
+        val tariffNightInput = dialogView.findViewById<EditText>(R.id.tariffNightInput)
+
+        tariffInput.setText(meter.tariff?.toString() ?: "")
+        if (meter.isTwoTariff) {
+            tariffNightInput.visibility = View.VISIBLE
+            tariffNightInput.setText(meter.tariffNight?.toString() ?: "")
+        } else {
+            tariffNightInput.visibility = View.GONE
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Тариф")
+            .setView(dialogView)
+            .setPositiveButton("Сохранить") { _, _ ->
+                val tariff = tariffInput.text.toString().replace(',', '.').toDoubleOrNull()
+                val tariffNight = if (meter.isTwoTariff) {
+                    tariffNightInput.text.toString().replace(',', '.').toDoubleOrNull()
+                } else null
+
+                viewModel.updateMeter(meter.copy(tariff = tariff, tariffNight = tariffNight))
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
 
     /**
      * Диалог добавления/редактирования показания.
