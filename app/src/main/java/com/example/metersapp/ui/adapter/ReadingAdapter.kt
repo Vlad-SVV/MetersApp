@@ -51,6 +51,8 @@ class ReadingAdapter(
         holder.itemView.setOnClickListener { onClick(item) }
     }
 
+    fun getItems(): List<Reading> = items
+
     override fun getItemCount(): Int = items.size
 
     inner class ReadingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

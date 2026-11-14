@@ -23,6 +23,10 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
+import java.io.OutputStreamWriter
+
 class MeterDetailActivity : AppCompatActivity() {
 
     companion object {
@@ -33,6 +37,12 @@ class MeterDetailActivity : AppCompatActivity() {
     private lateinit var adapter: ReadingAdapter
     private var meterId: Long = 0
     private var currentMeter: Meter? = null
+
+    private val createCsvLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri: Uri? ->
+        if (uri != null) {
+            writeCsvToUri(uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +65,16 @@ class MeterDetailActivity : AppCompatActivity() {
         // Кнопка «Изменить тариф»
         findViewById<Button>(R.id.tariffButton).setOnClickListener {
             showTariffDialog()
+        }
+
+        // Кнопка «Выгрузить данные»
+        findViewById<Button>(R.id.exportButton).setOnClickListener {
+            val meter = currentMeter
+            if (meter != null) {
+                // Предлагаем имя файла: Meter_Кухня_2026-11-13.csv
+                val fileName = "Meter_${meter.name}_${System.currentTimeMillis()}.csv"
+                createCsvLauncher.launch(fileName)
+            }
         }
 
 
@@ -168,6 +188,52 @@ class MeterDetailActivity : AppCompatActivity() {
             }
             .setNegativeButton("Отмена", null)
             .show()
+    }
+
+    private fun writeCsvToUri(uri: Uri) {
+        val meter = currentMeter ?: return
+        val readings = adapter.getItems() // Нам понадобится метод в адаптере
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        try {
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
+                val writer = OutputStreamWriter(outputStream)
+                // Заголовки
+                writer.write("Дата;Показание;Показание день;Показание ночь;Расход;Стоимость\n")
+
+                // Строки
+                for (i in readings.indices) {
+                    val r = readings[i]
+                    val prev = readings.getOrNull(i + 1) // Список отсортирован по убыванию даты
+                    val dateStr = dateFormat.format(Date(r.date))
+
+                    var consumption = ""
+                    var cost = ""
+
+                    if (r.value != null && prev?.value != null) {
+                        val diff = r.value - prev.value
+                        consumption = "%.2f".format(diff).replace(',', '.')
+                        if (meter.tariff != null) {
+                            cost = "%.2f".format(diff * meter.tariff).replace(',', '.')
+                        }
+                    } else if (r.valueDay != null && r.valueNight != null && prev?.valueDay != null && prev.valueNight != null) {
+                        val diffDay = r.valueDay - prev.valueDay
+                        val diffNight = r.valueNight - prev.valueNight
+                        consumption = "День: %.2f, Ночь: %.2f".format(diffDay, diffNight).replace(',', '.')
+                        if (meter.tariff != null && meter.tariffNight != null) {
+                            cost = "%.2f".format(diffDay * meter.tariff + diffNight * meter.tariffNight).replace(',', '.')
+                        }
+                    }
+
+                    writer.write("$dateStr;${r.value ?: ""};${r.valueDay ?: ""};${r.valueNight ?: ""};$consumption;$cost\n")
+                }
+                writer.flush()
+            }
+            android.widget.Toast.makeText(this, "Файл сохранён!", android.widget.Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            android.util.Log.e("CSV", "Ошибка экспорта", e)
+            android.widget.Toast.makeText(this, "Ошибка: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
 

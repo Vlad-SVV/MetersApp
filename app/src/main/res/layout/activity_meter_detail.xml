@@ -49,11 +49,26 @@
                 android:textSize="16sp"
                 android:layout_marginTop="4dp" />
 
+            <!-- Три кнопки аккуратно друг под другом -->
             <Button
                 android:id="@+id/backButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="← Назад"
+                android:layout_marginTop="12dp" />
+
+            <Button
+                android:id="@+id/tariffButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Изменить тариф"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/exportButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Экспорт в CSV"
                 android:layout_marginTop="8dp" />
 
         </LinearLayout>
@@ -90,12 +105,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
-    <Button
-        android:id="@+id/tariffButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Изменить тариф"
-        android:layout_marginTop="8dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
