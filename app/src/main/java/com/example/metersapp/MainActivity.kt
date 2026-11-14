@@ -14,13 +14,27 @@ import com.example.metersapp.ui.adapter.ObjectAdapter
 import com.example.metersapp.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
+import com.example.metersapp.utils.AppSettings
+
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
+    private lateinit var settings: AppSettings
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        settings = AppSettings(this)
+
+// СЕКРЕТНЫЙ ПЕРЕКЛЮЧАТЕЛЬ (зажмите заголовок на 2 секунды)
+        findViewById<android.widget.TextView>(R.id.titleText).setOnLongClickListener {
+            settings.isProVersion = !settings.isProVersion
+            val status = if (settings.isProVersion) "ВКЛЮЧЕН (Безлимит)" else "ВЫКЛЮЧЕН (Лимиты)"
+            android.widget.Toast.makeText(this, "Pro-режим: $status", android.widget.Toast.LENGTH_LONG).show()
+            true
+        }
 
         val recyclerView = findViewById<RecyclerView>(R.id.objectsRecyclerView)
         val addButton = findViewById<Button>(R.id.addObjectButton)
@@ -83,6 +97,16 @@ class MainActivity : AppCompatActivity() {
     /** Диалог добавления или редактирования объекта */
     private fun showAddEditObjectDialog(existing: MeterObject?) {
         val input = EditText(this)
+
+        // Проверяем лимит: если создаем новый, объектов >= 1 и это НЕ Pro-версия
+        if (existing == null && !settings.isProVersion && viewModel.objects.value.size >= 1) {
+            AlertDialog.Builder(this)
+                .setTitle("Ограничение бесплатной версии")
+                .setMessage("В бесплатной версии можно создать только 1 объект.\n\nВ будущем здесь появится кнопка «Купить Pro».")
+                .setPositiveButton("Понятно", null)
+                .show()
+            return
+        }
 
         // Если редактируем — подставляем текущее имя
         if (existing != null) {

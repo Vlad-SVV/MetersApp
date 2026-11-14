@@ -21,12 +21,16 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import com.example.metersapp.utils.AppSettings
+
 class MeterListActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_OBJECT_NAME = "extra_object_name"
         const val EXTRA_OBJECT_ID = "extra_object_id"
     }
+
+    private lateinit var settings: AppSettings
 
     private val viewModel: MeterListViewModel by viewModels()
     private lateinit var adapter: MeterAdapter
@@ -35,6 +39,7 @@ class MeterListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_meter_list)
+        settings = AppSettings(this)
 
         val objectName = intent.getStringExtra(EXTRA_OBJECT_NAME) ?: "Объект"
         objectId = intent.getLongExtra(EXTRA_OBJECT_ID, 0)
@@ -70,8 +75,18 @@ class MeterListActivity : AppCompatActivity() {
             }
         }
 
+
         addButton.setOnClickListener {
-            showAddMeterDialog()
+            // Проверяем: если это НЕ Pro и счётчиков уже >= 2, показываем предупреждение
+            if (!settings.isProVersion && viewModel.meters.value.size >= 2) {
+                AlertDialog.Builder(this)
+                    .setTitle("Ограничение бесплатной версии")
+                    .setMessage("В бесплатной версии к одному объекту можно добавить не более 2 счётчиков.")
+                    .setPositiveButton("Понятно", null)
+                    .show()
+            } else {
+                showAddMeterDialog()
+            }
         }
     }
 
