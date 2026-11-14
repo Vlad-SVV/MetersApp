@@ -36,8 +36,15 @@ class ObjectAdapter(
     class ObjectViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val nameText: TextView = itemView.findViewById(R.id.objectName)
 
+
         fun bind(obj: MeterObject) {
             nameText.text = obj.name
+            // Добавляем иконку дома перед текстом
+            val drawable = androidx.core.content.ContextCompat.getDrawable(itemView.context, android.R.drawable.ic_menu_myplaces)
+            if (drawable != null) {
+                drawable.setBounds(0, 0, 60, 60) // Размер иконки
+                nameText.setCompoundDrawables(drawable, null, null, null)
+            }
         }
     }
 }

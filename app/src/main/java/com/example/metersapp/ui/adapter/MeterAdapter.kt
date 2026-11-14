@@ -44,8 +44,19 @@ class MeterAdapter(
         private val serialText: TextView = itemView.findViewById(R.id.meterSerial)
         private val verificationText: TextView = itemView.findViewById(R.id.meterVerification)
 
+
         fun bind(meter: Meter) {
             nameText.text = meter.name
+
+            val (iconRes, colorHex) = when (meter.type) {
+                MeterType.COLD_WATER -> Pair(R.drawable.ic_cold_water, "#2196F3") // Синий
+                MeterType.HOT_WATER -> Pair(R.drawable.ic_hot_water, "#F44336")  // Красный
+                MeterType.ELECTRICITY -> Pair(R.drawable.ic_electricity, "#FF9800") // Оранжевый
+            }
+
+            itemView.findViewById<android.widget.ImageView>(R.id.meterIcon).setImageResource(iconRes)
+            itemView.findViewById<android.widget.ImageView>(R.id.meterIcon).setColorFilter(android.graphics.Color.parseColor(colorHex))
+
             typeText.text = when (meter.type) {
                 MeterType.COLD_WATER -> "Холодная вода"
                 MeterType.HOT_WATER -> "Горячая вода"
