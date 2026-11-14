@@ -28,12 +28,30 @@ class MainActivity : AppCompatActivity() {
 
         settings = AppSettings(this)
 
-// СЕКРЕТНЫЙ ПЕРЕКЛЮЧАТЕЛЬ (зажмите заголовок на 2 секунды)
-        findViewById<android.widget.TextView>(R.id.titleText).setOnLongClickListener {
+// СЕКРЕТНЫЙ ПЕРЕКЛЮЧАТЕЛЬ (зажать на 3 секунды)
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        val proRunnable = Runnable {
+            // Этот код сработает, только если продержать палец 3 секунды
             settings.isProVersion = !settings.isProVersion
             val status = if (settings.isProVersion) "ВКЛЮЧЕН (Безлимит)" else "ВЫКЛЮЧЕН (Лимиты)"
             android.widget.Toast.makeText(this, "Pro-режим: $status", android.widget.Toast.LENGTH_LONG).show()
-            true
+
+        }
+
+        findViewById<android.widget.TextView>(R.id.titleText).setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    // Палец коснулся экрана — запускаем таймер на 3000 мс (3 секунды)
+                    handler.postDelayed(proRunnable, 3000)
+                    true
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    // Палец отпущен раньше времени — отменяем таймер
+                    handler.removeCallbacks(proRunnable)
+                    true
+                }
+                else -> false
+            }
         }
 
         val recyclerView = findViewById<RecyclerView>(R.id.objectsRecyclerView)
