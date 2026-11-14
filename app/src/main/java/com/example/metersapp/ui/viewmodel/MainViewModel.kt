@@ -27,4 +27,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             objectDao.insert(MeterObject(name = name))
         }
     }
+    fun updateObject(obj: MeterObject) {
+        viewModelScope.launch {
+            objectDao.update(obj)
+        }
+    }
+
+    fun deleteObject(obj: MeterObject) {
+        viewModelScope.launch {
+            objectDao.delete(obj)
+        }
+    }
 }
