@@ -78,8 +78,12 @@ class MeterDetailActivity : AppCompatActivity() {
         findViewById<Button>(R.id.exportButton).setOnClickListener {
             val meter = currentMeter
             if (meter != null) {
-                // Предлагаем имя файла: Meter_Кухня_2026-11-13.csv
-                val fileName = "Meter_${meter.name}_${System.currentTimeMillis()}.csv"
+                // Заменяем пробелы на подчеркивания для красоты
+                val safeName = meter.name.replace(" ", "_")
+                val safeSerial = meter.serialNumber.replace(" ", "_")
+
+                // Имя файла: Meter_Кухня_123456_1715600000.csv
+                val fileName = "Meter_${safeName}_${safeSerial}_${System.currentTimeMillis()}.csv"
                 createCsvLauncher.launch(fileName)
             }
         }
