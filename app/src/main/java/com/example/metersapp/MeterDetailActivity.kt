@@ -126,8 +126,31 @@ class MeterDetailActivity : AppCompatActivity() {
                 if (meter.isTwoTariff) "Электро (день/ночь)" else "Электроэнергия"
         }
         findViewById<TextView>(R.id.meterSerialText).text = "Заводской №: ${meter.serialNumber}"
-        findViewById<TextView>(R.id.meterVerificationText).text =
-            "Поверка: ${dateFormat.format(Date(meter.verificationDate))} — ${dateFormat.format(Date(meter.verificationEndDate))}"
+
+        // Настраиваем цвет и текст для поверки
+        val verificationTextView = findViewById<TextView>(R.id.meterVerificationText)
+        val verificationEndDate = Date(meter.verificationEndDate)
+        val verificationStartDate = Date(meter.verificationDate)
+
+        val currentTime = System.currentTimeMillis()
+        val thirtyDaysInMillis = 30L * 24 * 60 * 60 * 1000
+
+        val text = "Поверка: ${dateFormat.format(verificationStartDate)} — ${dateFormat.format(verificationEndDate)}"
+
+        when {
+            meter.verificationEndDate < currentTime -> {
+                verificationTextView.text = "$text\n⚠️ ПОВЕРКА ПРОСРОЧЕНА!"
+                verificationTextView.setTextColor(android.graphics.Color.RED)
+            }
+            meter.verificationEndDate - currentTime < thirtyDaysInMillis -> {
+                verificationTextView.text = "$text\n⚠️ Скоро заканчивается!"
+                verificationTextView.setTextColor(android.graphics.Color.parseColor("#FF9800")) // Оранжевый
+            }
+            else -> {
+                verificationTextView.text = text
+                verificationTextView.setTextColor(android.graphics.Color.parseColor("#666666")) // Обычный серый
+            }
+        }
     }
 
     /** Диалог «Что сделать?» при клике на показание */
