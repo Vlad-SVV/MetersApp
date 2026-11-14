@@ -15,6 +15,12 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MeterDetailViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -81,5 +87,62 @@ class MeterDetailViewModel(application: Application) : AndroidViewModel(applicat
                 )
             )
         }
+    }
+    // Для показа сообщений об успехе или ошибке
+    private val _importStatus = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val importStatus: StateFlow<String?> = _importStatus
+
+    fun importReadings(uri: Uri) {
+        val meterId = meterIdFlow.value ?: return
+        viewModelScope.launch {
+            try {
+                val contentResolver = getApplication<Application>().contentResolver
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val reader = inputStream.bufferedReader()
+                    var line = reader.readLine() // Пропускаем строку заголовков
+                    val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                    var count = 0
+
+                    while (reader.readLine().also { line = it } != null) {
+                        if (line.isBlank()) continue
+
+                        // Разделяем строку по точке с запятой (как мы сохраняли)
+                        val parts = line.split(";")
+                        if (parts.size >= 4) {
+                            val dateStr = parts[0]
+                            val valStr = parts[1].replace(',', '.')
+                            val dayStr = parts[2].replace(',', '.')
+                            val nightStr = parts[3].replace(',', '.')
+
+                            val date = dateFormat.parse(dateStr)?.time ?: continue
+                            val value = valStr.toDoubleOrNull()
+                            val day = dayStr.toDoubleOrNull()
+                            val night = nightStr.toDoubleOrNull()
+
+                            // Если есть хоть одно значение — сохраняем
+                            if (value != null || (day != null && night != null)) {
+                                readingDao.insert(
+                                    Reading(
+                                        meterId = meterId,
+                                        date = date,
+                                        value = value,
+                                        valueDay = day,
+                                        valueNight = night
+                                    )
+                                )
+                                count++
+                            }
+                        }
+                    }
+                    _importStatus.value = "Успешно импортировано записей: $count"
+                }
+            } catch (e: Exception) {
+                _importStatus.value = "Ошибка импорта: ${e.message}"
+            }
+        }
+    }
+
+    fun clearImportStatus() {
+        _importStatus.value = null
     }
 }

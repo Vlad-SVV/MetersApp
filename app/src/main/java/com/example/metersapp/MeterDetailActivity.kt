@@ -27,6 +27,7 @@ import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.OutputStreamWriter
 
+
 class MeterDetailActivity : AppCompatActivity() {
 
     companion object {
@@ -41,6 +42,12 @@ class MeterDetailActivity : AppCompatActivity() {
     private val createCsvLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri: Uri? ->
         if (uri != null) {
             writeCsvToUri(uri)
+        }
+    }
+
+    private val openCsvLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.importReadings(uri)
         }
     }
 
@@ -74,6 +81,20 @@ class MeterDetailActivity : AppCompatActivity() {
                 // Предлагаем имя файла: Meter_Кухня_2026-11-13.csv
                 val fileName = "Meter_${meter.name}_${System.currentTimeMillis()}.csv"
                 createCsvLauncher.launch(fileName)
+            }
+        }
+
+        findViewById<Button>(R.id.importButton).setOnClickListener {
+            // Открываем выбор файла, разрешая любые текстовые форматы
+            openCsvLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "*/*"))
+        }
+
+        lifecycleScope.launch {
+            viewModel.importStatus.collect { message ->
+                if (message != null) {
+                    android.widget.Toast.makeText(this@MeterDetailActivity, message, android.widget.Toast.LENGTH_LONG).show()
+                    viewModel.clearImportStatus()
+                }
             }
         }
 
